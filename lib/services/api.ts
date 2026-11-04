@@ -75,6 +75,7 @@ export const portalApi = createApi({
     "PortalLedger",
     "PortalDocRequests",
     "PortalQueries",
+    "PortalOutlays",
   ],
   endpoints: (builder) => ({
     // ─── Client Portal Authentication Endpoints ───
@@ -193,6 +194,11 @@ export const portalApi = createApi({
       providesTags: ["PortalLedger"],
       transformResponse: (response: { data: any }) => response.data,
     }),
+    getPortalOutlays: builder.query<any[], void>({
+      query: () => "/portal/outlays",
+      providesTags: ["PortalOutlays"],
+      transformResponse: (response: { data: any[] }) => response.data,
+    }),
 
     // ─── Document Requests & Collaboration ───
     getPortalDocumentRequests: builder.query<any[], void>({
@@ -226,16 +232,38 @@ export const portalApi = createApi({
       transformResponse: (response: { data: any }) => response.data,
     }),
 
-    // ─── Payment Gateway & UPI ───
+    // ─── Direct UPI & Payment Confirmation ───
     getInvoiceUpiQr: builder.query<any, string>({
-      query: (invoiceId) => `/invoices/${invoiceId}/upi-qr`,
+      query: (invoiceId) => `/portal/invoices/${invoiceId}/upi-qr`,
       transformResponse: (response: { data: any }) => response.data,
     }),
     createInvoicePaymentLink: builder.mutation<any, string>({
       query: (invoiceId) => ({
-        url: `/invoices/${invoiceId}/payment-link`,
+        url: `/portal/invoices/${invoiceId}/payment-link`,
         method: "POST",
       }),
+      transformResponse: (response: { data: any }) => response.data,
+    }),
+    confirmPortalPayment: builder.mutation<any, { invoiceId: string; utrNumber?: string }>({
+      query: ({ invoiceId, utrNumber }) => ({
+        url: `/portal/invoices/${invoiceId}/confirm-payment`,
+        method: "POST",
+        body: { utrNumber },
+      }),
+      invalidatesTags: ["PortalInvoices", "PortalReceipts", "PortalLedger"],
+      transformResponse: (response: { data: any }) => response.data,
+    }),
+    getOutlayUpiQr: builder.query<any, string>({
+      query: (outlayId) => `/portal/outlays/${outlayId}/upi-qr`,
+      transformResponse: (response: { data: any }) => response.data,
+    }),
+    confirmOutlayPayment: builder.mutation<any, { outlayId: string; utrNumber?: string }>({
+      query: ({ outlayId, utrNumber }) => ({
+        url: `/portal/outlays/${outlayId}/confirm-payment`,
+        method: "POST",
+        body: { utrNumber },
+      }),
+      invalidatesTags: ["PortalOutlays", "PortalReceipts", "PortalLedger"],
       transformResponse: (response: { data: any }) => response.data,
     }),
   }),
@@ -257,11 +285,15 @@ export const {
   useGetPortalInvoicesQuery,
   useGetPortalReceiptsQuery,
   useGetPortalLedgerQuery,
+  useGetPortalOutlaysQuery,
   useGetPortalDocumentRequestsQuery,
   useFulfillPortalDocumentRequestMutation,
   useGetPortalQueryTicketsQuery,
   useCreatePortalQueryTicketMutation,
   useGetInvoiceUpiQrQuery,
   useCreateInvoicePaymentLinkMutation,
+  useConfirmPortalPaymentMutation,
+  useGetOutlayUpiQrQuery,
+  useConfirmOutlayPaymentMutation,
 } = portalApi;
 
