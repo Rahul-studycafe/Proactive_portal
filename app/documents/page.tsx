@@ -6,15 +6,12 @@ import {
   FileText,
   Download,
   Search,
-  Filter,
   Eye,
   FileSpreadsheet,
   FileArchive,
   FileCheck,
-  ShieldCheck,
-  Calendar,
   Loader2,
-  ExternalLink,
+  UploadCloud,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -38,23 +35,13 @@ import {
 import { useGetPortalDocumentsQuery } from "@/lib/services/api";
 import { formatDate } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
-
-const FOLDER_CATEGORIES = [
-  { id: "all", label: "All Returns & Vault", icon: FolderOpen },
-  { id: "GST", label: "GST Returns (3B, 1)", icon: FileCheck },
-  { id: "Income Tax", label: "Income Tax & ITR-V", icon: FileText },
-  { id: "ROC", label: "ROC / MCA Annual Filings", icon: ShieldCheck },
-  { id: "Audit", label: "Audited Financials", icon: FileSpreadsheet },
-  { id: "Certificates", label: "Registrations & DSC", icon: FileArchive },
-];
+import { UploadAdvanceDocModal } from "@/components/documents/UploadAdvanceDocModal";
 
 export default function FiledDocumentsPage() {
-  const [selectedFolder, setSelectedFolder] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [previewDoc, setPreviewDoc] = useState<any | null>(null);
 
   const { data: documents = [], isLoading } = useGetPortalDocumentsQuery({
-    folder: selectedFolder === "all" ? undefined : selectedFolder,
     search: searchQuery ? searchQuery : undefined,
   });
 
@@ -91,7 +78,7 @@ export default function FiledDocumentsPage() {
       />
 
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Filed Documents Vault
@@ -100,28 +87,14 @@ export default function FiledDocumentsPage() {
             Centralized repository of filed returns, government challans, audited statements, and statutory acknowledgments.
           </p>
         </div>
-      </div>
-
-      {/* Folder Categories Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {FOLDER_CATEGORIES.map((cat) => {
-          const Icon = cat.icon;
-          const isSelected = selectedFolder === cat.id;
-          return (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedFolder(cat.id)}
-              className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all ${
-                isSelected
-                  ? "bg-primary text-primary-foreground border-primary shadow-xs"
-                  : "bg-card hover:bg-muted/40 text-muted-foreground hover:text-foreground border-border/80"
-              }`}
-            >
-              <Icon className="h-5 w-5 mb-1.5" />
-              <span className="text-xs font-semibold leading-tight line-clamp-2">{cat.label}</span>
-            </button>
-          );
-        })}
+        <UploadAdvanceDocModal
+          trigger={
+            <Button size="sm" className="gap-2 shadow-xs shrink-0">
+              <UploadCloud className="h-4 w-4" />
+              Upload Document
+            </Button>
+          }
+        />
       </div>
 
       {/* Search Bar */}
@@ -153,13 +126,22 @@ export default function FiledDocumentsPage() {
             <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
               Government acknowledgment documents will appear here automatically once your returns or audit filings are finalized.
             </p>
+            <div className="mt-4">
+              <UploadAdvanceDocModal
+                trigger={
+                  <Button size="sm" variant="outline" className="gap-2">
+                    <UploadCloud className="h-4 w-4 text-primary" />
+                    Upload Document in Advance
+                  </Button>
+                }
+              />
+            </div>
           </div>
         ) : (
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
                 <TableHead className="text-xs font-semibold">Document Name</TableHead>
-                <TableHead className="text-xs font-semibold">Filing Category</TableHead>
                 <TableHead className="text-xs font-semibold">Date Uploaded</TableHead>
                 <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
               </TableRow>
@@ -173,21 +155,26 @@ export default function FiledDocumentsPage() {
                         {getFileIcon(doc.fileName)}
                       </div>
                       <div>
-                        <span className="font-semibold text-xs text-foreground block">
-                          {doc.fileName}
-                        </span>
-                        {doc.description && (
-                          <span className="text-[11px] text-muted-foreground block">
-                            {doc.description}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-xs text-foreground block">
+                            {doc.fileName}
+                          </span>
+                          {(doc.source === "portal_client_upload" || doc.clientUserId) && (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800"
+                            >
+                              Self-Submitted
+                            </Badge>
+                          )}
+                        </div>
+                        {(doc.description || doc.notes) && (
+                          <span className="text-[11px] text-muted-foreground block mt-0.5">
+                            {doc.description || doc.notes}
                           </span>
                         )}
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="text-[11px]">
-                      {doc.category || "Statutory Return"}
-                    </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {formatDate(doc.createdAt)}
@@ -228,7 +215,7 @@ export default function FiledDocumentsPage() {
               <FileText className="h-4 w-4 text-primary" /> {previewDoc?.fileName}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Category: {previewDoc?.category} • Uploaded on {previewDoc && formatDate(previewDoc.createdAt)}
+              Uploaded on {previewDoc && formatDate(previewDoc.createdAt)}
             </DialogDescription>
           </DialogHeader>
 

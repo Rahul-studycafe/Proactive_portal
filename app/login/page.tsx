@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Shield,
-  KeyRound,
   Mail,
   Phone,
   ArrowRight,
@@ -14,12 +13,11 @@ import {
   Loader2,
   CheckCircle2,
   Lock,
-  Building2,
   MapPin,
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardFooter, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -159,7 +157,7 @@ export default function PortalLoginPage() {
   };
 
   const branding = websiteConfig?.branding || {
-    firmName: "Proactive Advisory",
+    firmName: "PMS Advisory",
     brandColor: "#2563eb",
     logoUrl: "",
   };
@@ -220,7 +218,7 @@ export default function PortalLoginPage() {
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="otp" className="text-xs font-medium">OTP Login</TabsTrigger>
                 <TabsTrigger value="password" className="text-xs font-medium">Password</TabsTrigger>
-                <TabsTrigger value="magic" className="text-xs font-medium">Magic Link</TabsTrigger>
+                <TabsTrigger value="magic" className="text-xs font-medium">Link</TabsTrigger>
               </TabsList>
 
               {/* TAB 1: OTP Login (Default) */}
@@ -228,13 +226,13 @@ export default function PortalLoginPage() {
                 {!otpSent ? (
                   <form onSubmit={handleRequestOtp} className="space-y-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="otp-target" className="text-xs font-medium">Mobile Number or Email</Label>
+                      <Label htmlFor="otp-target" className="text-xs font-medium">Enter Email</Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground opacity-60" />
                         <Input
                           id="otp-target"
                           type="text"
-                          placeholder="Registered mobile or email"
+                          placeholder="Registered Email"
                           className="pl-9 text-xs"
                           value={otpIdentifier}
                           onChange={(e) => setOtpIdentifier(e.target.value)}
@@ -443,7 +441,7 @@ export default function PortalLoginPage() {
           )}
         </div>
         <p className="text-[10px] text-muted-foreground/80">
-          Powered by Proactive Office OS • Secure 256-Bit SSL Client Encryption
+          Powered by PMS Office OS • Secure 256-Bit SSL Client Encryption
         </p>
       </footer>
     </div>

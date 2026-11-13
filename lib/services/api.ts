@@ -174,6 +174,15 @@ export const portalApi = createApi({
       providesTags: ["PortalDocuments"],
       transformResponse: (response: { data: any[] }) => response.data,
     }),
+    uploadPortalDocument: builder.mutation<any, FormData>({
+      query: (formData) => ({
+        url: "/portal/documents/upload",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["PortalDocuments"],
+      transformResponse: (response: { data: any }) => response.data,
+    }),
 
     // ─── Billing, Invoices & Receipts ───
     getPortalInvoices: builder.query<any[], void>({
@@ -282,6 +291,7 @@ export const {
   useGetPortalWebsiteConfigQuery,
   useGetComplianceCalendarQuery,
   useGetPortalDocumentsQuery,
+  useUploadPortalDocumentMutation,
   useGetPortalInvoicesQuery,
   useGetPortalReceiptsQuery,
   useGetPortalLedgerQuery,

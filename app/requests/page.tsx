@@ -31,6 +31,7 @@ import {
 } from "@/lib/services/api";
 import { formatDate } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
+import { UploadAdvanceDocModal } from "@/components/documents/UploadAdvanceDocModal";
 
 export default function DocumentRequestsPage() {
   const { data: requests = [], isLoading } = useGetPortalDocumentRequestsQuery();
@@ -93,6 +94,14 @@ export default function DocumentRequestsPage() {
             Fulfill document requirements dispatched by your accounting team for tax verification, GST audits, or KYC.
           </p>
         </div>
+        <UploadAdvanceDocModal
+          trigger={
+            <Button size="sm" variant="outline" className="gap-2 shrink-0">
+              <UploadCloud className="h-4 w-4 text-primary" />
+              Upload Other Document in Advance
+            </Button>
+          }
+        />
       </div>
 
       {/* Requests List */}
@@ -105,8 +114,18 @@ export default function DocumentRequestsPage() {
           <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto mb-3" />
           <h3 className="text-sm font-semibold">No Pending Document Requests</h3>
           <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-            You are completely caught up! When your accountant requires records (like bank statements or vouchers), requests will appear here.
+            You are completely caught up! If you have bank statements, invoices, or challans you want to share with your CA in advance, you can upload them below.
           </p>
+          <div className="mt-4">
+            <UploadAdvanceDocModal
+              trigger={
+                <Button size="sm" className="gap-2">
+                  <UploadCloud className="h-4 w-4" />
+                  Upload Document in Advance
+                </Button>
+              }
+            />
+          </div>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

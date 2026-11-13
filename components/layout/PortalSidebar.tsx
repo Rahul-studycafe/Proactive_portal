@@ -84,7 +84,7 @@ export function PortalSidebar() {
         )}
         {!collapsed && (
           <span className="text-base font-semibold tracking-tight truncate">
-            {branding?.firmName || "Proactive"}
+            {branding?.firmName || "PMS"}
           </span>
         )}
       </div>

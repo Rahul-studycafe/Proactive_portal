@@ -30,6 +30,7 @@ import {
   useGetPortalOutlaysQuery,
 } from "@/lib/services/api";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import { UploadAdvanceDocModal } from "@/components/documents/UploadAdvanceDocModal";
 
 export default function PortalOverviewPage() {
   const { data: profileData, isLoading: loadingProfile } = useGetPortalProfileQuery();
@@ -168,15 +169,17 @@ export default function PortalOverviewPage() {
                 <span>Pay Invoices</span>
               </Button>
             </Link>
-            <Link href="/requests">
-              <Button
-                size="sm"
-                className="gap-1.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
-              >
-                <UploadCloud className="h-3.5 w-3.5 text-primary-foreground" />
-                <span>Upload Documents</span>
-              </Button>
-            </Link>
+            <UploadAdvanceDocModal
+              trigger={
+                <Button
+                  size="sm"
+                  className="gap-1.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
+                >
+                  <UploadCloud className="h-3.5 w-3.5 text-primary-foreground" />
+                  <span>Upload Documents</span>
+                </Button>
+              }
+            />
             <Link href="/profile">
               <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                 <User className="h-3.5 w-3.5" />
@@ -343,7 +346,7 @@ export default function PortalOverviewPage() {
                 </h2>
               </div>
               <span className="font-mono text-[11px] rounded bg-muted px-2 py-0.5 text-muted-foreground border">
-                {client?.fileNo || "F-2026-007"}
+                {client?.clientNumber || client?.fileNo || "C-2026-007"}
               </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -373,10 +376,10 @@ export default function PortalOverviewPage() {
               </div>
               <div>
                 <span className="text-[11px] text-muted-foreground block uppercase font-medium">
-                  Client File Ref.
+                  Client Number
                 </span>
                 <span className="text-xs font-semibold text-foreground mt-0.5 block">
-                  {client?.fileNo || "F-2026-007"}
+                  {client?.clientNumber || client?.fileNo || "C-2026-007"}
                 </span>
               </div>
             </div>

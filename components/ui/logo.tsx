@@ -20,7 +20,7 @@ export function Logo({ className = "" }: { className?: string }) {
         />
       </svg>
       <span className="font-semibold text-lg tracking-tight text-foreground">
-        ProActive
+        PMS
       </span>
     </div>
   );
