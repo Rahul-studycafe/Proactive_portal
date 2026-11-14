@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { usePortalVerifyMagicLinkMutation } from "@/lib/services/api";
 
-export default function MagicLoginPage() {
+function MagicLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams?.get("token");
@@ -48,49 +48,72 @@ export default function MagicLoginPage() {
   }, [token, verifyMagicLink, router]);
 
   return (
+    <Card className="w-full max-w-[400px] text-center shadow-lg border-border">
+      <CardHeader>
+        <CardTitle className="text-lg">Magic Link Verification</CardTitle>
+        <CardDescription className="text-xs">
+          Authenticating your client portal session...
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="py-6 flex flex-col items-center justify-center space-y-4">
+        {isLoading && (
+          <>
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-xs text-muted-foreground">Verifying security token...</p>
+          </>
+        )}
+
+        {success && (
+          <>
+            <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+            <p className="text-sm font-semibold text-emerald-600">
+              Verified! Redirecting to your dashboard...
+            </p>
+          </>
+        )}
+
+        {errorMsg && (
+          <>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-2">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <p className="text-xs text-destructive max-w-xs">{errorMsg}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2 text-xs"
+              onClick={() => router.push("/portal/login")}
+            >
+              Back to Sign In
+            </Button>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function MagicLoginPage() {
+  return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-      <Card className="w-full max-w-[400px] text-center shadow-lg border-border">
-        <CardHeader>
-          <CardTitle className="text-lg">Magic Link Verification</CardTitle>
-          <CardDescription className="text-xs">
-            Authenticating your client portal session...
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="py-6 flex flex-col items-center justify-center space-y-4">
-          {isLoading && (
-            <>
+      <Suspense
+        fallback={
+          <Card className="w-full max-w-[400px] text-center shadow-lg border-border">
+            <CardHeader>
+              <CardTitle className="text-lg">Magic Link Verification</CardTitle>
+              <CardDescription className="text-xs">
+                Loading security token...
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="py-6 flex flex-col items-center justify-center space-y-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-xs text-muted-foreground">Verifying security token...</p>
-            </>
-          )}
-
-          {success && (
-            <>
-              <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-              <p className="text-sm font-semibold text-emerald-600">
-                Verified! Redirecting to your dashboard...
-              </p>
-            </>
-          )}
-
-          {errorMsg && (
-            <>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-2">
-                <AlertCircle className="h-6 w-6" />
-              </div>
-              <p className="text-xs text-destructive max-w-xs">{errorMsg}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2 text-xs"
-                onClick={() => router.push("/portal/login")}
-              >
-                Back to Sign In
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
+              <p className="text-xs text-muted-foreground">Please wait...</p>
+            </CardContent>
+          </Card>
+        }
+      >
+        <MagicLoginContent />
+      </Suspense>
     </div>
   );
 }
