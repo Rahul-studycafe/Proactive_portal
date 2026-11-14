@@ -34,7 +34,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(function(){
               try {
-                var saved = localStorage.getItem('proactive-portal-theme');
+                var saved = localStorage.getItem('pms-portal-theme') || localStorage.getItem('proactive-portal-theme');
                 var theme = saved || 'system';
                 var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 if (isDark) {
