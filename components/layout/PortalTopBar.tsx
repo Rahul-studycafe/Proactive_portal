@@ -75,7 +75,7 @@ export function PortalTopBar() {
         )}
 
         <span className="hidden text-sm font-medium text-muted-foreground md:inline">
-          {practice?.name || "Rahul and co"}
+          {practice?.name || "Client Portal"}
         </span>
 
         {/* Global Theme Switcher */}

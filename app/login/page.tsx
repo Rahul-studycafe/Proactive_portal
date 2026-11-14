@@ -157,7 +157,7 @@ export default function PortalLoginPage() {
   };
 
   const branding = websiteConfig?.branding || {
-    firmName: "PMS Advisory",
+    firmName: "Client Portal",
     brandColor: "#2563eb",
     logoUrl: "",
   };

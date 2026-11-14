@@ -552,7 +552,7 @@ export default function PortalOverviewPage() {
             </div>
             <div className="space-y-2 pt-1">
               <div className="text-sm font-bold text-foreground">
-                {practice?.name || "Rahul and co"}
+                {practice?.name || "Client Portal"}
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 For urgent compliances, tax assessments, or statutory document filing, reach out directly to your assigned engagement partner.
