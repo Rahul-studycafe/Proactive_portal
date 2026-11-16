@@ -133,6 +133,38 @@ export const portalApi = createApi({
         method: "POST",
       }),
     }),
+    portalSelectFirm: builder.mutation<any, { selectionToken: string; clientUserId: string }>({
+      query: (payload) => ({
+        url: "/portal/auth/select-firm",
+        method: "POST",
+        body: payload,
+      }),
+      transformResponse: (response: { data: any }) => response.data,
+    }),
+    portalSwitchFirm: builder.mutation<any, { targetClientUserId: string }>({
+      query: (payload) => ({
+        url: "/portal/auth/switch-firm",
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: [
+        "PortalProfile",
+        "PortalCompliance",
+        "PortalDocuments",
+        "PortalInvoices",
+        "PortalReceipts",
+        "PortalLedger",
+        "PortalDocRequests",
+        "PortalQueries",
+        "PortalOutlays",
+      ],
+      transformResponse: (response: { data: any }) => response.data,
+    }),
+    getPortalMyFirms: builder.query<any[], void>({
+      query: () => "/portal/auth/my-firms",
+      providesTags: ["PortalProfile"],
+      transformResponse: (response: { data: any[] }) => response.data,
+    }),
 
     // ─── Profile & Firm Branding ───
     getPortalProfile: builder.query<any, void>({
@@ -293,6 +325,9 @@ export const {
   usePortalSendMagicLinkMutation,
   usePortalVerifyMagicLinkMutation,
   usePortalLogoutMutation,
+  usePortalSelectFirmMutation,
+  usePortalSwitchFirmMutation,
+  useGetPortalMyFirmsQuery,
   useGetPortalProfileQuery,
   useUpdatePortalProfileMutation,
   useChangePortalPasswordMutation,

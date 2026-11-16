@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Search, LogOut, User, Bell, Building2 } from "lucide-react";
+import { Search, LogOut, User, Bell, Building2, Briefcase, ChevronDown, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -12,19 +12,41 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { toast } from "sonner";
 import {
   useGetPortalProfileQuery,
   usePortalLogoutMutation,
+  useGetPortalMyFirmsQuery,
+  usePortalSwitchFirmMutation,
 } from "@/lib/services/api";
 
 export function PortalTopBar() {
   const router = useRouter();
   const { data: profileData } = useGetPortalProfileQuery();
   const [portalLogout] = usePortalLogoutMutation();
+  const { data: myFirms = [] } = useGetPortalMyFirmsQuery();
+  const [switchFirm, { isLoading: isSwitchingFirm }] = usePortalSwitchFirmMutation();
 
   const user = profileData?.user;
   const client = profileData?.client;
   const practice = profileData?.practice;
+
+  const handleFirmSwitch = async (targetFirm: any) => {
+    try {
+      const res = await switchFirm({ targetClientUserId: targetFirm.clientUserId }).unwrap();
+      if (typeof window !== "undefined") {
+        localStorage.setItem("portalAccessToken", res.accessToken);
+        if (res.user) {
+          localStorage.setItem("portalUser", JSON.stringify(res.user));
+        }
+      }
+      toast.success(`Switched to ${targetFirm.firmName}`);
+      router.push("/");
+      window.location.reload();
+    } catch (err: any) {
+      toast.error(err?.data?.error?.message || err?.data?.message || "Failed to switch workspace");
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -74,9 +96,53 @@ export function PortalTopBar() {
           </div>
         )}
 
-        <span className="hidden text-sm font-medium text-muted-foreground md:inline">
-          {practice?.name || "Client Portal"}
-        </span>
+        {/* Firm / Practice Workspace Switcher (Multi-Firm Support) */}
+        {myFirms.length > 1 ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                disabled={isSwitchingFirm}
+                className="flex items-center gap-2 rounded-lg border border-border/80 bg-accent/40 hover:bg-accent px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors cursor-pointer"
+                title="Switch Practice Workspace"
+              >
+                <Briefcase className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="truncate max-w-[150px]">{practice?.name || "Practice Workspace"}</span>
+                <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Switch Practice Workspace
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {myFirms.map((f: any) => {
+                const isActive = f.isCurrent;
+                return (
+                  <DropdownMenuItem
+                    key={f.clientUserId}
+                    disabled={isActive || isSwitchingFirm}
+                    onClick={() => handleFirmSwitch(f)}
+                    className="flex items-center justify-between py-2 cursor-pointer"
+                  >
+                    <div className="flex flex-col truncate pr-2">
+                      <span className={`text-xs font-semibold ${isActive ? "text-primary" : "text-foreground"}`}>
+                        {f.firmName}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground truncate">
+                        {f.clientName}
+                      </span>
+                    </div>
+                    {isActive && <Check className="h-4 w-4 text-primary shrink-0" />}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <span className="hidden text-sm font-medium text-muted-foreground md:inline">
+            {practice?.name || "Client Portal"}
+          </span>
+        )}
 
         {/* Global Theme Switcher */}
         <ThemeToggle />

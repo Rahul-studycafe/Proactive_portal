@@ -7,6 +7,7 @@ import {
   Mail,
   Phone,
   ArrowRight,
+  ArrowLeft,
   Eye,
   EyeOff,
   Sparkles,
@@ -15,9 +16,18 @@ import {
   Lock,
   MapPin,
   RefreshCw,
+  Building2,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +37,7 @@ import {
   usePortalRequestOtpMutation,
   usePortalVerifyOtpMutation,
   usePortalSendMagicLinkMutation,
+  usePortalSelectFirmMutation,
   useGetPortalWebsiteConfigQuery,
 } from "@/lib/services/api";
 
@@ -40,6 +51,12 @@ export default function PortalLoginPage() {
   const [requestOtp, { isLoading: isRequestingOtp }] = usePortalRequestOtpMutation();
   const [verifyOtp, { isLoading: isVerifyingOtp }] = usePortalVerifyOtpMutation();
   const [sendMagicLink, { isLoading: isSendingMagic }] = usePortalSendMagicLinkMutation();
+  const [selectFirm, { isLoading: isSelectingFirm }] = usePortalSelectFirmMutation();
+
+  // Multi-firm workspace picker state
+  const [requiresFirmSelection, setRequiresFirmSelection] = useState(false);
+  const [selectionToken, setSelectionToken] = useState("");
+  const [availableFirms, setAvailableFirms] = useState<any[]>([]);
 
   // Tab state: OTP Login is default per Phase F-122
   const [activeTab, setActiveTab] = useState<"otp" | "password" | "magic">("otp");
@@ -80,6 +97,31 @@ export default function PortalLoginPage() {
     router.push("/");
   };
 
+  // Dispatch auth response: check if multi-firm workspace selection is needed
+  const handleAuthResponse = (data: any) => {
+    if (data?.requiresFirmSelection) {
+      setRequiresFirmSelection(true);
+      setSelectionToken(data.selectionToken);
+      setAvailableFirms(data.firms || []);
+      toast.info("Please select which practice workspace you wish to access.");
+      return;
+    }
+    handleAuthSuccess(data);
+  };
+
+  // Select a firm from the workspace picker
+  const handleChooseFirm = async (firm: any) => {
+    try {
+      const res = await selectFirm({
+        selectionToken,
+        clientUserId: firm.clientUserId,
+      }).unwrap();
+      handleAuthSuccess(res);
+    } catch (err: any) {
+      toast.error(err?.data?.error?.message || err?.data?.message || "Failed to switch workspace");
+    }
+  };
+
   // Password submission
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +135,7 @@ export default function PortalLoginPage() {
         emailOrPhone: passwordEmailOrPhone,
         password,
       }).unwrap();
-      handleAuthSuccess(res);
+      handleAuthResponse(res);
     } catch (err: any) {
       toast.error(err?.data?.error?.message || err?.data?.message || "Invalid credentials");
     }
@@ -133,7 +175,7 @@ export default function PortalLoginPage() {
         identifier: otpIdentifier,
         code: otpCode,
       }).unwrap();
-      handleAuthSuccess(res);
+      handleAuthResponse(res);
     } catch (err: any) {
       toast.error(err?.data?.error?.message || err?.data?.message || "Invalid or expired OTP");
     }
@@ -203,23 +245,92 @@ export default function PortalLoginPage() {
           </p>
         </div>
 
-        {/* Main Login Card (Phase F-122) */}
-        <Card className="w-full max-w-[440px] shadow-xl border-border/80 bg-card/95 backdrop-blur-sm">
-          <CardHeader className="pb-4">
-            <Tabs
-              value={activeTab}
-              onValueChange={(val) => {
-                setActiveTab(val as any);
-                setOtpSent(false);
-                setMagicSent(false);
-              }}
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="otp" className="text-xs font-medium">OTP Login</TabsTrigger>
-                <TabsTrigger value="password" className="text-xs font-medium">Password</TabsTrigger>
-                <TabsTrigger value="magic" className="text-xs font-medium">Link</TabsTrigger>
-              </TabsList>
+        {/* Main Login or Workspace Selection Card */}
+        {requiresFirmSelection ? (
+          <Card className="w-full max-w-[460px] shadow-xl border-border/80 bg-card/95 backdrop-blur-sm">
+            <CardHeader className="pb-3 text-center">
+              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Briefcase className="h-6 w-6" />
+              </div>
+              <CardTitle className="text-xl font-bold">Select Practice Workspace</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-1">
+                Your account is associated with multiple accounting firms. Choose which workspace you wish to open.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-2.5 pt-1">
+              {availableFirms.map((firm) => (
+                <button
+                  key={firm.clientUserId}
+                  onClick={() => handleChooseFirm(firm)}
+                  disabled={isSelectingFirm}
+                  className="w-full text-left p-3.5 rounded-xl border border-border/70 bg-card hover:bg-accent/60 hover:border-primary/50 transition-all flex items-center justify-between group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-sm">
+                      {firm.firmLogo ? (
+                        <img src={firm.firmLogo} alt={firm.firmName} className="h-8 w-8 object-contain rounded-lg" />
+                      ) : (
+                        <Building2 className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
+                        {firm.firmName}
+                      </div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                        <span>{firm.clientName}</span>
+                        {firm.entityType && (
+                          <>
+                            <span>•</span>
+                            <span className="capitalize">{firm.entityType.replace(/_/g, " ")}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {isSelectingFirm ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                  )}
+                </button>
+              ))}
+            </CardContent>
+
+            <CardFooter className="pt-2 pb-4 flex justify-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
+                onClick={() => {
+                  setRequiresFirmSelection(false);
+                  setSelectionToken("");
+                  setAvailableFirms([]);
+                }}
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Sign in with another account
+              </Button>
+            </CardFooter>
+          </Card>
+        ) : (
+          <Card className="w-full max-w-[440px] shadow-xl border-border/80 bg-card/95 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <Tabs
+                value={activeTab}
+                onValueChange={(val) => {
+                  setActiveTab(val as any);
+                  setOtpSent(false);
+                  setMagicSent(false);
+                }}
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="otp" className="text-xs font-medium">OTP Login</TabsTrigger>
+                  <TabsTrigger value="password" className="text-xs font-medium">Password</TabsTrigger>
+                  <TabsTrigger value="magic" className="text-xs font-medium">Link</TabsTrigger>
+                </TabsList>
 
               {/* TAB 1: OTP Login (Default) */}
               <TabsContent value="otp" className="pt-4 space-y-4">
@@ -419,6 +530,7 @@ export default function PortalLoginPage() {
             Need access? Contact your advisory team to activate your client credentials.
           </CardFooter>
         </Card>
+        )}
       </div>
 
       {/* Branded Footer (Phase F-121) */}
